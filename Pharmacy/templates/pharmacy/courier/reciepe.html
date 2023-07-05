@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container">
+    <h1>Информация о рецепте</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <p><strong>Клиент:</strong> {{ order_item.recipe.client }}</p>
+            <p><strong>Медикамент:</strong> {{ order_item.recipe.medicament.name }}</p>
+            <p><strong>Дозировка:</strong> {{ order_item.recipe.dosage }}</p>
+            <p><strong>Продолжительность приема:</strong> {{ order_item.recipe.duration }} дней</p>
+        </div>
+        <div class="col-md-6">
+            <p><strong>Код рецепта:</strong> {{ order_item.recipe.code }}</p>
+            <p><strong>Дата создания:</strong> {{ order_item.recipe.expiration_date }}</p>
+        </div>
+    </div>
+    <button class="btn btn-primary">
+        <a href="{% url 'courier_order_detail' order_item.order.pk %}">Вернуться</a>
+    </button>
+  </div>
+{% endblock %}

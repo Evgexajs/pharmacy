@@ -1,0 +1,41 @@
+//удалить миграции
+python manage.py migrate pharmacy_calc zero
+//после этого удалить все в ./pharmacy_calc/migrations
+
+//миграция
+python manage.py makemigrations pharmacy_calc
+python manage.py migrate
+
+//очистить db
+python manage.py drop_data
+
+//заполнить бд
+python manage.py create_default
+
+//запустить 
+python manage.py runserver
+
+//создать админа
+python manage.py createsuperuser
+
+//дефолтная аптека - 65.56839108467103, 57.15294448974763
+
+//собрать статику
+python manage.py collectstatic
+
+# был админ который сможет добавлять медикаменты и фармацевтов с курьерами
+
+
+- удалить подтверждение рецепта у фармацевта +
+ удалил блок из order_items
+  (
+
+                            <!-- {% elif order_item.recipe %}
+                                <button class="btn btn-primary">
+                                    <a href="{% url 'pharmacist_reciepe' order_item.pk %}">Проверить рецепт</a>
+                                </button> -->
+  )
+
+- добавить курьеру кнопку подтвердить оплату + (добавлен обработчки оплаты) адрес courier_order_paid
+- добавить таблицу статуса заказа + (но в шаблонах по старому) status
+- подтверждение по почте (не делаем как-то слишком сложно)

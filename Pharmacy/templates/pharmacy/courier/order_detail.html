@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<script src="{% static 'js/route.js' %}"></script>
+    <div style="display: flex; align-items: baseline; gap: 10px">
+        <h2>Клиент:</h2> 
+       <div>ФИО: {{ client.FIO }}</div> 
+       <div>Телефон: {{ client.phone }}</div> 
+    </div>
+    <div>
+        <div style="display: flex; align-items: baseline; gap: 10px">
+            <h2>Доставка:</h2>
+            {%if route_time %}
+            <div>Доставка займет: {{ route_time }} минут</div> 
+            {% endif %}
+        </div>
+        <h4>Маршрут</h4>
+        <div id="map" style="width: 100%; height: 400px"></div>
+    </div>
+    <table class="table">
+        <h2>Элементы заказа:</h2>
+        <thead>
+            <tr>
+                <th scope="col">Медикамент</th>
+                <th scope="col">Количество</th>
+                <th scope="col">Цена</th>
+                <th scope="col">Рецепт</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order_item in order_items %}
+                <tr>
+                    <td>{{ order_item.medicament.name }}</td>
+                    <td>{{ order_item.quantity }}</td>
+                    <td>{{ order_item.total_price }}</td>
+                    <td>
+                        {%if order_item.medicament.recipe_required%}
+                            <button class="btn btn-primary">
+                                <a href="{% url 'courier_reciepe' order_item.pk %}">Детали рецепта</a>
+                            </button>
+                        {% else %}
+                            Рецепт не нужен
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="2" class="text-end"><strong>Итоговая сумма:</strong></td>
+                <td>{{ order.total_price }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {%if order.is_paid == True %}
+        <button class="btn btn-primary">
+            <a href="{% url 'courier_order_approve' order.pk %}">Доставлен</a>
+        </button>
+    {% endif %}
+    {%if order.is_paid == False %}
+        <button class="btn btn-success">
+            <a href="{% url 'courier_order_paid' order.pk %}">Оплачен</a>
+        </button>
+    {% endif %}
+    <button class="btn btn-danger">
+        <a href="{% url 'courier_order_cancel' order.pk %}">Отклонить</a>
+    </button>
+    <script type="text/javascript">
+        ymaps.ready(init);
+        function init() {
+            var delivery_address = {{delivery_location | safe}}
+            var market_location = [{{market_location}}]
+            var myMap = new ymaps.Map("map", {
+                center: [market_location[1], market_location[0]],
+                zoom: 15,
+                controls: ['routePanelControl'],
+                yandexMapDisablePoiInteractivity: true
+            });
+            myMap.behaviors.disable('multiTouch');
+            myMap.behaviors.disable('drag');
+            
+            var control = myMap.controls.get('routePanelControl');
+            control.routePanel.options.set({
+                types: { driving: true },
+                allowSwitch: false,
+                showRoutes: false,
+                addViaPoints: false,
+                addWayPoints: false,
+                removeWayPoints: false,
+                expandable: false
+            });
+
+            control.routePanel.state.set({
+                type: 'driving',
+                fromEnabled: false,
+                toEnabled: false,
+                from: 'Тюмень, Ямская улица, 104',
+                to: '{{order.delivery_address}}'
+            })
+            control.routePanel.options.set({ mapBlock: false });
+        }
+    </script>
+{% endblock %}

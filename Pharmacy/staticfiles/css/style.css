@@ -1,0 +1,33 @@
+body {
+  background-color: #e6f2ff; /* Цвет фона страницы */
+  height: 100vh;
+}
+
+.navbar {
+  background-color: #88d4f7; /* Цвет навигационной панели */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn a {
+  color: white;
+  text-decoration: none;
+}
+.btn a:hover {
+  color: white;
+  text-decoration: none;
+}
+.separator {
+  border-left: 1px solid black;
+}
+
+.nav-link.active {
+  font-weight: bold;
+}
+
+.main {
+  margin: 10px;
+}
+
+[class*="ground-pane"] {
+  filter: grayscale(1);
+}

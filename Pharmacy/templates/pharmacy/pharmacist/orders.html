@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <script>
+        ymaps.ready(init);
+        function init() {
+            var map = new ymaps.Map('map', {
+                center: [57.152985, 65.542274],
+                zoom: 13,
+                controls: ['zoomControl']
+            });
+
+            var placemark = new ymaps.Placemark([57.152985, 65.542274], {
+                balloonContent: 'Выберите местоположение'
+            }, {
+                draggable: true,
+                preset: 'islands#redDotIcon'
+            });
+
+            placemark.events.add('dragend', function (e) {
+                var coords = placemark.geometry.getCoordinates();
+                console.log(coords);
+            });
+
+            map.geoObjects.add(placemark);
+        }
+    </script>
+    <h1>Данные о заказах</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Адрес доставки</th>
+                <th scope="col">Сумма</th>
+                <th scope="col">Дата создания</th>
+                <th scope="col">Проверка</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>
+                        {{ order.delivery_address }}
+                    </td>
+                    <td>
+                        {{ order.total_price }}
+                    </td>
+                    <td>
+                        {{ order.date_created }}
+                    </td>
+                    <td>
+                        {%if order.status.status_code == 'B' %}
+                            <button class="btn btn-primary">
+                                <a href="{% url 'pharmacist_order_items' order.pk %}">Проверить и собрать заказ</a>
+                            </button>
+                        {% elif order.status.status_code == 'P' %}
+                            Заказ в пути
+                        {% elif order.status.status_code == 'D' %}
+                            Доставлен
+                        {% elif order.status.status_code == 'C' %}
+                            Отменен
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Данные о заказах</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Адрес доставки</th>
+                <th scope="col">Статус</th>
+                <th scope="col">Сумма</th>
+                <th scope="col">Дата создания</th>
+                <th scope="col">Дополнительно</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>
+                        {{ order.delivery_address }}
+                    </td>
+                    <td>
+                        {%if order.status.status_code == 'B' %}
+                            Создан
+                        {% elif order.status.status_code == 'P' %}
+                            В процессе
+                        {% elif order.status.status_code == 'D' %}
+                            Доставлен
+                        {% elif order.status.status_code == 'C' %}
+                            Отменен
+                        {% else %}
+                            Оформляется
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ order.total_price }}
+                    </td>
+                    <td>
+                        {{ order.date_created }}
+                    </td>
+                    <td>
+                        {%if order.status.status_code == 'B' %}
+                            Обрабатывает фармацевт
+                        {% elif order.status.status_code == 'P' %}
+                        <button class="btn btn-primary">
+                            <a href="{% url 'client_order_detail' order.pk %}">Отследить</a>
+                        </button>
+                        {% elif order.status.status_code == 'D' %}
+                            Доставлен
+                        {% elif order.status.status_code == 'C' %}
+                            Отменен
+                        {% else %}
+                            Оформите заказ
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

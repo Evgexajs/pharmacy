@@ -1,0 +1,15 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Route Time</title>
+    <!-- <script src="{% static 'js/route.js' %}"></script> -->
+  </head>
+  <body>
+    {% if error %}
+      <p>{{ error }}</p>
+    {% else %}
+      <p>Route time: {{ route_time }} seconds</p>
+    {% endif %}
+  </body>
+</html>

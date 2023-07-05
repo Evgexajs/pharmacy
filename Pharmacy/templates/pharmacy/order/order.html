@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    
+    {%if order and order.status == None %}
+
+    <h1>Данные о заказе</h1>
+    {% if error_message %}
+    <div class="alert alert-danger">
+        <strong>{{error_message}}</strong>
+    </div>
+    {% endif %}
+    <div style="width: 100%; display: flex; align-items: center;">
+        <div id="map" style="width: 50%; height: 400px; border: 1px solid silver;"></div>
+        <div class="p-2" style="width: 50%; height: 400px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; font-size: larger; height: 70%; justify-content: space-around;">
+                <div>
+                    <strong>
+                        Статус заказа: 
+                    </strong>
+                    {%if order.status.status_code == 'B' %}
+                        Создан
+                    {% elif order.status.status_code == 'P' %}
+                        В процессе
+                    {% elif order.status.status_code == 'D' %}
+                        Доставлен
+                    {% elif order.status.status_code == 'C' %}
+                        Отменен
+                    {% else %}
+                        Оформляется
+                    {% endif %}
+                </div>
+                <div>
+                    <strong>Дата создания заказа: </strong>{{ order.date_created }}
+                </div>
+                <div>
+                    <strong>Адрес: </strong>
+                    
+                    {%if order.delivery_address %}
+                        <span id="address">{{order.delivery_address}}</span>
+                    {% else %}
+                        <span id="address"></span>
+                    {% endif %}
+                </div>
+                <div>
+                    <input type="number" class="form-control" id="apartment" name="apartment" placeholder="Номер квартиры">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="addAddress">Выбрать адрес доставки</button>
+        </div>
+    </div>
+
+    <h2>Медикаменты заказа:</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Медикамент</th>
+                <th scope="col">Количество</th>
+                <th scope="col">Цена</th>
+                <th scope="col">Цена за 1</th>
+                <th scope="col">Рецепт</th>
+                <th scope="col">Сохранить</th>
+                <th scope="col">Удалить</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order_item in order_items %}
+                <tr>
+                    <td>{{ order_item.medicament.name }}</td>
+                    <td style="display: flex; align-items: center;">
+                        <span class="increase-quantity" data-order-item="{{ order_item.id }}" style="margin: 0 5px; cursor: pointer; background-color: #90ce87; padding: 3px 6px; border-radius: 3px;">+</span>
+                        <span class="quantity" style="font-weight: bold;">{{ order_item.quantity }}</span>
+                        <span class="decrease-quantity" data-order-item="{{ order_item.id }}" style="margin: 0 5px; cursor: pointer; background-color: #faa6a6; padding: 3px 6px; border-radius: 3px;">-</span>
+                    </td>
+                    <td class="total">{{ order_item.total_price }}</td>
+                    <td class="price">{{ order_item.medicament.price }}</td>
+                    <td>
+                        
+                        {%if order_item.medicament.recipe_required%}
+                            {%if order_item.recipe %}
+                                Рецепт предоставлен, код: {{order_item.recipe.code}}
+                            {% else %}
+                            <button class="btn btn-primary">
+                                <a href="{% url 'reciepe' order_item.pk %}">Предоставьте рецепт</a>
+                            </button>
+                            {% endif %}
+                        {% else %}
+                            Рецепт не нужен
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-success">
+                            <a class="update-quantity" data-order-item="{{ order_item.id }}">✓</a>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger">
+                            <a href="{% url 'delete_to_order' order_item.pk %}">X</a>
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Подтвердить заказ</button>
+    </form>
+    <script>
+        $(document).ready(function() {
+            $(".increase-quantity").click(function() {
+                var orderItemId = $(this).data("order-item");
+                var quantityElement = $(this).siblings(".quantity");
+                var quantity = parseInt(quantityElement.text());
+                quantity += 1;
+                quantityElement.text(quantity);
+                
+                var priceElement = $(this).closest("tr").find(".price");
+                var totalElement = $(this).closest("tr").find(".total");
+                var price = parseInt(priceElement.text());
+                totalElement.text(quantity * price);
+
+                var totalPriceElement = $('.total_price');
+                totalPriceElement.text(parseInt(totalPriceElement.text()) + quantity * price);
+                // updateQuantity(orderItemId, quantity);
+            });
+
+            $(".decrease-quantity").click(function() {
+                var orderItemId = $(this).data("order-item");
+                var quantityElement = $(this).siblings(".quantity");
+                var quantity = parseInt(quantityElement.text());
+                if (quantity > 1) {
+                    quantity -= 1;
+                    quantityElement.text(quantity);
+                    // updateQuantity(orderItemId, quantity);
+                    var priceElement = $(this).closest("tr").find(".price");
+                    var totalElement = $(this).closest("tr").find(".total");
+                    var price = parseInt(priceElement.text());
+                    totalElement.text(quantity * price);
+
+                    var totalPriceElement = $('.total_price');
+                    totalPriceElement.text(parseInt(totalPriceElement.text()) - quantity * price);
+                }
+            });
+
+            $(".update-quantity").click(function() {
+                var orderItemId = $(this).data("order-item");
+                var quantityElement = $(this).closest("tr").find(".quantity");
+                var quantity =  parseInt(quantityElement.text());
+                // Отправить AJAX-запрос на обновление количества элемента
+                var csrf_token = "{{ csrf_token }}";
+                $.ajax({
+                    url: '/update_to_order/',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrf_token
+                    },
+                    data: {
+                        'order_item_id': orderItemId,
+                        'quantity': quantity
+                    },
+                    success: function(response) {
+                        alert('Количество успешно обновлено');
+                    },
+                    error: function(response) {
+                        alert('Ошибка при обновлении количества');
+                    }
+                });
+            });
+        });
+        ymaps.ready(init);
+
+        function init() {
+            var base = [57.152985, 65.542274];
+            var map = new ymaps.Map('map', {
+                center: base,
+                zoom: 15,
+                controls: ['zoomControl']
+            });
+            var point = '{{order.delivery_address}}'
+            ymaps.geocode(point).then(function(res) {
+                var coordinates = res.geoObjects.get(0).geometry.getCoordinates();
+                if (coordinates[0] === 44.932351 && coordinates[1] === 7.537081)
+                coordinates = base
+                var placemark = new ymaps.Placemark(coordinates, {
+                    balloonContent: 'Выберите местоположение'
+                }, {
+                    draggable: true,
+                    preset: 'islands#redDotIcon'
+                });
+
+                placemark.events.add('dragend', function (e) {
+                    var coords = placemark.geometry.getCoordinates();
+                    ymaps.geocode(coords).then(function (res) {
+                        var nearestBuilding = res.geoObjects.get(0);
+                        placemark.geometry.setCoordinates(nearestBuilding.geometry.getCoordinates());
+
+                        var address = nearestBuilding.getAddressLine();
+                        $('#address').html(address);
+                    });
+                });
+
+                map.geoObjects.add(placemark);
+
+                var csrf_token = "{{ csrf_token }}";
+                $('#addAddress').click(function() {
+                    var coords = placemark.geometry.getCoordinates();
+                    
+                    ymaps.geocode(coords).then(function (res) {
+                        var firstGeoObject = res.geoObjects.get(0);
+                        var address = firstGeoObject.getAddressLine();
+                        address += ' кв.' + $('#apartment').val();
+                        $('#address').html(address);
+                        $.ajax({
+                            url: '/add_address/',
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrf_token
+                            },
+                            data: {
+                                'order': '{{order.id}}',
+                                'address': address
+                            },
+                            success: function(response) {
+                                alert('Адрес успешно добавлен');
+                            },
+                            error: function(response) {
+                                alert('Ошибка при добавлении адреса');
+                            }
+                        });
+                    });
+                });
+            });
+        }
+    </script>
+
+    
+    {% else %}
+    <h1>Закажите несколько товаров</h1>
+    {% endif %}
+{% endblock %}

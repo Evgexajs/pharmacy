@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card mt-5">
+        <div class="card-header">
+          <h4>Вход</h4>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            {% if error_message %}
+            <div class="alert alert-danger">
+              <strong>Пожалуйста, исправьте следующие ошибки:</strong>
+              <ul>
+                  {% for field in form %}
+                      {% if field.errors %}
+                          <li><strong>{{ field.label }}</strong></li>
+                          <ul class="errorlist">
+                              {% for error in field.errors %}
+                                  <li>{{ error }}</li>
+                              {% endfor %}
+                          </ul>
+                      {% endif %}
+                  {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+            <div class="form-group">
+              <label for="username">Email:</label>
+              <input type="email" class="form-control" id="username" name="username">
+            </div>
+            <div class="form-group">
+              <label for="password">Пароль:</label>
+              <input type="password" class="form-control" id="password" name="password">
+            </div>
+            <button type="submit" class="btn btn-primary">Вход</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

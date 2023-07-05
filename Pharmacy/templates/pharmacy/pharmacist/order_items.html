@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div style="display: flex; align-items: baseline; gap: 10px">
+        <h2>Клиент:</h2> 
+        <div>ФИО: {{ order.client.FIO }}</div> 
+        <div>Телефон: {{ order.clients.phone }}</div> 
+    </div>
+    {% if error_message %}
+    <div class="alert alert-danger">
+        <strong>{{error_message}}</strong>
+    </div>
+    {% endif %}
+
+    <h2>Медикаменты заказа:</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Медикамент</th>
+                <th scope="col">Количество</th>
+                <th scope="col">Сумам</th>
+                <th scope="col">Рецепт</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order_item in order_items %}
+                <tr>
+                    <td>{{ order_item.medicament.name }}</td>
+                    <td>{{ order_item.quantity }}</td>
+                    <td>{{ order_item.total_price }}</td>
+                    <td>
+                        
+                        {%if order_item.medicament.recipe_required%}
+                            {%if order_item.recipe_approve %}
+                                Рецепт проверен, код: {{order_item.recipe.code}}
+                            {% else %}
+                                Рецепт не предоставлен
+                            {% endif %}
+                        {% else %}
+                            Рецепт не нужен
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="2" class="text-end"><strong>Итоговая сумма:</strong></td>
+                <td>{{ order.total_price }}</td>
+            </tr>
+        </tbody>
+    </table>
+    <button class="btn btn-primary">
+        <a href="{% url 'pharmacist_order_approve' order.pk %}">Подтвердить передачу курьеру</a>
+    </button>
+    <button class="btn btn-danger">
+        <a href="{% url 'pharmacist_order_cancel' order.pk %}">Отклонить</a>
+    </button>
+{% endblock %}

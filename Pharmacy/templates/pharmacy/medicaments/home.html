@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load order_tags %}
+{% block content %}
+<div class="container">
+  <h1>Список медикаментов</h1>
+  {% if user.is_authenticated %}
+    <div></div>
+  {% else %}
+    <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы добавить в корзину медикаменты.</p>
+  {% endif %}
+  <div class="row">
+    {% for medicament in medicaments %}
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5>{{ medicament.name }}</h5>
+          </div>
+          <div class="card-body">
+            <p><strong>Показания к применению:</strong> {{ medicament.indications_for_use }}</p>
+            <p><strong>Производитель:</strong> {{ medicament.manufacturer_address }}</p>
+            <p><strong>Срок годности:</strong> {{ medicament.shelf_life }}</p>
+            <p><strong>Количество на складе:</strong> {{ medicament.amount_in_stock }}</p>
+            <p><strong>Цена:</strong> {{ medicament.price }}</p>
+            {% if user.is_authenticated and user_type == 'client' and order %}
+              {% if order|has_order_item:medicament %}
+                <p>Медикамент уже добавлен. Перейдите к <a href="{% url 'order' %}">оформлению заказа</a>.</p>
+              {% else %}
+                <form method="post" action="{% url 'add_to_order' medicament.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-primary">Добавить в корзину</button>
+                </form>
+              {% endif %}
+            {% else %}
+              {% if user.is_authenticated and user_type == 'client' %}
+              <form method="post" action="{% url 'add_to_order' medicament.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Добавить в корзину</button>
+              </form>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
